@@ -1,5 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Course.Optional where
 
@@ -16,6 +17,28 @@ data Optional a =
   | Empty
   deriving (Eq, Show)
 
+
+-- x :: Bool
+-- x = True
+
+-- f True = 0
+-- f False = 1
+
+
+-- g :: Bool -> (Int -> P.String)
+-- g True i = show i
+-- g False _ = "ignored"
+
+-- ignored :: Int -> P.String
+-- ignored = g False
+
+
+-- g' :: Bool -> Int -> P.String
+-- g' = \ b i -> 
+--   case b of
+--     True -> show i
+--     False -> "ignored"
+
 -- | Map the given function on the possible value.
 --
 -- >>> mapOptional (+1) Empty
@@ -27,8 +50,8 @@ mapOptional ::
   (a -> b)
   -> Optional a
   -> Optional b
-mapOptional =
-  error "todo: Course.Optional#mapOptional"
+mapOptional f =
+  bindOptional (Full . f)
 
 -- | Bind the given function on the possible value.
 --
@@ -44,8 +67,10 @@ bindOptional ::
   (a -> Optional b)
   -> Optional a
   -> Optional b
-bindOptional =
-  error "todo: Course.Optional#bindOptional"
+bindOptional f (Full a) =
+  f a
+bindOptional _ Empty =
+  Empty
 
 -- | Return the possible value if it exists; otherwise, the second argument.
 --
@@ -58,8 +83,10 @@ bindOptional =
   Optional a
   -> a
   -> a
-(??) =
-  error "todo: Course.Optional#(??)"
+(??) (Full a) _ =
+  a
+(??) Empty a =
+  a
 
 -- | Try the first optional for a value. If it has a value, use it; otherwise,
 -- use the second value.
@@ -79,8 +106,10 @@ bindOptional =
   Optional a
   -> Optional a
   -> Optional a
-(<+>) =
-  error "todo: Course.Optional#(<+>)"  
+(<+>) Empty a =
+  a
+(<+>) a _ =
+  a
 
 applyOptional :: Optional (a -> b) -> Optional a -> Optional b
 applyOptional f a = bindOptional (\f' -> mapOptional (\a' -> f' a') a) f

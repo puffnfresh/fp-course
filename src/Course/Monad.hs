@@ -13,6 +13,8 @@ import Course.List
 import Course.Optional
 import qualified Prelude as P((=<<))
 
+import Data.Monoid
+
 -- | All instances of the `Monad` type-class must satisfy one law. This law
 -- is not checked by the compiler. This law is given as:
 --
@@ -24,6 +26,10 @@ class Applicative f => Monad f where
     (a -> f b)
     -> f a
     -> f b
+
+-- eff-map :: (a -> b)   -> f a -> f b
+-- apply   :: f (a -> b) -> f a -> f b
+-- bind    :: (a -> f b) -> f a -> f b
 
 infixr 1 =<<
 
@@ -63,8 +69,31 @@ infixr 1 =<<
   f (a -> b)
   -> f a
   -> f b
-(<**>) =
-  error "todo: Course.Monad#(<**>)"
+(<**>) fab fa =
+  (\ab -> ab <$> fa) =<< fab
+
+-- fab :: f (a -> b)
+-- fa :: f a
+
+-- bind
+-- (=<< fab) :: ((a -> b) -> f c) -> f c
+
+-- goal
+-- fa :: f a
+-- (a -> b) -> f b
+
+-- \f -> f <$> fa
+
+-- fmap
+-- (<$>) :: (a -> b)   -> f a -> f b
+
+-- bind
+-- (=<<) :: (a -> f b) -> f a -> f b
+
+-- for {
+--   ab <- fab
+--   b <- fa.map(ab)
+-- } yield b
 
 infixl 4 <**>
 
@@ -77,8 +106,8 @@ instance Monad ExactlyOne where
     (a -> ExactlyOne b)
     -> ExactlyOne a
     -> ExactlyOne b
-  (=<<) =
-    error "todo: Course.Monad (=<<)#instance ExactlyOne"
+  (=<<) f (ExactlyOne a) =
+    f a
 
 -- | Binds a function on a List.
 --
@@ -90,7 +119,7 @@ instance Monad List where
     -> List a
     -> List b
   (=<<) =
-    error "todo: Course.Monad (=<<)#instance List"
+    flatMap
 
 -- | Binds a function on an Optional.
 --
@@ -102,7 +131,7 @@ instance Monad Optional where
     -> Optional a
     -> Optional b
   (=<<) =
-    error "todo: Course.Monad (=<<)#instance Optional"
+    bindOptional
 
 -- | Binds a function on the reader ((->) t).
 --
@@ -113,8 +142,18 @@ instance Monad ((->) t) where
     (a -> ((->) t b))
     -> ((->) t a)
     -> ((->) t b)
-  (=<<) =
-    error "todo: Course.Monad (=<<)#instance ((->) t)"
+  (f =<< g) t =
+    f (g t) t
+
+-- WRITER
+instance Monoid t => Monad ((,) t) where
+  (=<<) ::
+    (a -> (t, b))
+    -> (t, a)
+    -> (t, b)
+  (=<<) f (t1, a) =
+    let (t2, b) = f a
+    in (mappend t1 t2, b)
 
 -- | Flattens a combined structure to a single structure.
 --
@@ -134,7 +173,7 @@ join ::
   f (f a)
   -> f a
 join =
-  error "todo: Course.Monad#join"
+  (id =<<)
 
 -- | Implement a flipped version of @(=<<)@, however, use only
 -- @join@ and @(<$>)@.
@@ -147,8 +186,14 @@ join =
   f a
   -> (a -> f b)
   -> f b
-(>>=) =
-  error "todo: Course.Monad#(>>=)"
+(>>=) fa afb =
+  join (afb <$> fa)
+
+-- afb <$> fa :: f (f b)
+-- join ^ :: f b
+-- pure :: Applicative f => a -> f a
+
+-- (a -> b) -> f a -> f b
 
 infixl 1 >>=
 
@@ -163,8 +208,8 @@ infixl 1 >>=
   -> (a -> f b)
   -> a
   -> f c
-(<=<) =
-  error "todo: Course.Monad#(<=<)"
+(<=<) bfc afb =
+  (bfc =<<) . afb
 
 infixr 1 <=<
 

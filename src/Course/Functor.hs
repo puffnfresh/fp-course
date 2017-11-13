@@ -10,6 +10,18 @@ import Course.Optional
 import Course.List
 import qualified Prelude as P(fmap)
 
+
+-- scalaz.Functor
+-- class Functor
+
+-- [Covariant] functor
+
+-- Functor: (a -> b)          -> f a -> f b
+-- Applicative:  f (a -> b)   -> f a -> f b
+-- Monad: (a -> f b)          -> f a -> f b
+
+-- Contravariant: (b -> a) -> f a -> f b
+
 -- | All instances of the `Functor` type-class must satisfy two laws. These laws
 -- are not checked by the compiler. These laws are given as:
 --
@@ -42,7 +54,7 @@ instance Functor ExactlyOne where
     -> ExactlyOne a
     -> ExactlyOne b
   (<$>) =
-    error "todo: Course.Functor (<$>)#instance ExactlyOne"
+    mapExactlyOne
 
 -- | Maps a function on the List functor.
 --
@@ -57,7 +69,7 @@ instance Functor List where
     -> List a
     -> List b
   (<$>) =
-    error "todo: Course.Functor (<$>)#instance List"
+    map
 
 -- | Maps a function on the Optional functor.
 --
@@ -72,11 +84,13 @@ instance Functor Optional where
     -> Optional a
     -> Optional b
   (<$>) =
-    error "todo: Course.Functor (<$>)#instance Optional"
+    mapOptional
 
 -- | Maps a function on the reader ((->) t) functor.
 --
 -- >>> ((+1) <$> (*2)) 8
+-- 17
+-- >>> ((+1)  .  (*2)) 8
 -- 17
 instance Functor ((->) t) where
   (<$>) ::
@@ -84,7 +98,11 @@ instance Functor ((->) t) where
     -> ((->) t a)
     -> ((->) t b)
   (<$>) =
-    error "todo: Course.Functor (<$>)#((->) t)"
+    (.)
+
+instance Functor ((,) t) where
+  (<$>) f (t, a) =
+    (t, f a)
 
 -- | Anonymous map. Maps a constant value on a functor.
 --
@@ -100,7 +118,7 @@ instance Functor ((->) t) where
   -> f b
   -> f a
 (<$) =
-  error "todo: Course.Functor#(<$)"
+  (<$>) . const
 
 -- | Anonymous map producing unit value.
 --
@@ -120,7 +138,7 @@ void ::
   f a
   -> f ()
 void =
-  error "todo: Course.Functor#void"
+  (() <$)
 
 -----------------------
 -- SUPPORT LIBRARIES --
