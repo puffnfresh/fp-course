@@ -33,7 +33,8 @@ import qualified Numeric as N
 -- The custom list type
 data List t =
   Nil
-  | t :. List t
+  | (:.) t (List t) -- Cons
+-- | t :. List t
   deriving (Eq, Ord)
 
 -- Right-associative
@@ -50,10 +51,58 @@ infinity =
   in inf 0
 
 -- functions over List that you may consider using
+-- 1 :. 2 :. 3 :. Nil
+-- (:.) 1 ((:.) 2 ((:.) 3 Nil)))
+
+-- f 1 (f 2 (f 3 b))
+-- foldRight f b (1 :. 2 :. 3 :. Nil)
+
+-- (+) 1 ((+) 2 ((+) 3 0))
+-- 1 + 2 + 3 + 0
+-- 6
+
+-- 1 :. 2 :. 3 :. Nil
+-- 1 *  2 *  3 *  1
+-- 6
+
+-- foldRight const 0 (1 :. 2 :. 3 :. Nil)
+
+-- (:.)  1 ((:.)  2 ((:.)  3 Nil)))
+
+-- const 1 (const 2 (const 3 0))
+-- 1
+
+-- x = (:.) 1 x
+
+-- const 1 (const 1 (const 1 ...))
+-- 1
+
+-- 1 + 2 + 3 + 4
+-- (((1 + 2) + 3) + 4)
+--- 1 + (2 + (3 + 4))
+
+-- foldRight (*) 1 (1 :. 2 :. 3 :. Nil)
+
+-- foldRight is constructor replacement
 foldRight :: (a -> b -> b) -> b -> List a -> b
 foldRight _ b Nil      = b
 foldRight f b (h :. t) = f h (foldRight f b t)
 
+-- foldLeft (-) 100 (1 :. 2 :. 3 :. Nil)
+-- ((100 - 1) - 2) - 3
+-- (-) ((-) ((-) 100 1) 2) 3
+-- 94
+
+-- foldRight (-) 100 (1 :. 2 :. 3 :. Nil)
+-- 1 - (2 - (3 - 100))
+-- (-) 1 ((-) 2 ((-) 3 100)))
+-- -98
+
+-- var counter = 0;
+-- for(var i = 0; i < xs.length; i++) {
+--   counter += xs[i];
+-- }
+-- counter;
 foldLeft :: (b -> a -> b) -> b -> List a -> b
 foldLeft _ b Nil      = b
 foldLeft f b (h :. t) = let b' = f b h in b' `seq` foldLeft f b' t
@@ -76,7 +125,20 @@ headOr ::
   -> List a
   -> a
 headOr =
-  error "todo: Course.List#headOr"
+  foldRight const
+
+-- f a = g a
+-- f = g
+
+
+-- headOr a Nil
+-- foldRight const a Nil
+-- a
+
+-- headOr a (x :. Nil)
+-- foldRight const a (x :. Nil)
+-- const x a
+-- x
 
 -- | The product of the elements of a list.
 --
@@ -91,8 +153,8 @@ headOr =
 product ::
   List Int
   -> Int
-product =
-  error "todo: Course.List#product"
+product xs =
+  foldRight (*) 1 xs
 
 -- | Sum the elements of the list.
 --
@@ -107,7 +169,7 @@ sum ::
   List Int
   -> Int
 sum =
-  error "todo: Course.List#sum"
+  foldRight (+) 0
 
 -- | Return the length of the list.
 --
@@ -118,8 +180,15 @@ sum =
 length ::
   List a
   -> Int
-length =
-  error "todo: Course.List#length"
+length xs =
+  foldRight (\_ a -> a + 1) 0 xs
+
+-- 1 :. (2 :. (3 :. Nil))
+
+-- (\_ a -> 1 + a) 1 ((\_ a -> a + 1) 2 ((\_ a -> a + 1) 3 0))
+
+-- 1 + (1 + (1 + 0))
+-- 3
 
 -- | Map the given function on each element of the list.
 --
@@ -133,8 +202,17 @@ map ::
   (a -> b)
   -> List a
   -> List b
-map =
-  error "todo: Course.List#map"
+map f =
+  foldRight (\a -> (f a :.)) Nil
+
+-- 1   :. 2   :. 3   :. Nil
+
+-- f 1 :. f 2 :. f 3 :. Nil
+
+
+-- 3 :. Nil
+-- (\a b -> f a :. b) 3 Nil
+-- f 3 :. Nil
 
 -- | Return elements satisfying the given predicate.
 --
@@ -150,8 +228,19 @@ filter ::
   (a -> Bool)
   -> List a
   -> List a
-filter =
-  error "todo: Course.List#filter"
+filter f =
+  foldRight (\a b -> if f a then a :. b else b) Nil
+
+-- 3 :. Nil
+
+-- (\a b -> if f a then a :. b else b) 3 Nil
+-- if f a then 3 :. Nil else Nil
+
+-- if True then 3 :. Nil else Nil
+-- 3 :. Nil
+
+-- if False then 3 :. Nil else Nil
+-- Nil
 
 -- | Append two lists to a new list.
 --
@@ -169,8 +258,13 @@ filter =
   List a
   -> List a
   -> List a
-(++) =
-  error "todo: Course.List#(++)"
+(++) xs ys =
+  foldRight (:.) ys xs
+
+-- xs = 1 :. Nil
+-- ys = 2 :. Nil
+
+-- result = 1 :. (2 :. Nil)
 
 infixr 5 ++
 
@@ -188,7 +282,19 @@ flatten ::
   List (List a)
   -> List a
 flatten =
-  error "todo: Course.List#flatten"
+  foldRight (++) Nil
+
+-- (3 :. Nil) :. Nil
+-- 3 :. Nil
+
+-- (3 :. Nil) ++ Nil
+
+-- (1 :. Nil) :. (2 :. Nil) :. (3 :. Nil) :. Nil
+-- (1 :. Nil) ++ (2 :. Nil) ++ (3 :. Nil) ++ Nil
+
+-- (\a b -> a ++ b) (3 :. Nil) Nil
+-- (3 :. Nil) ++ Nil
+-- 3 :. Nil
 
 -- | Map a function then flatten to a list.
 --
@@ -204,8 +310,21 @@ flatMap ::
   (a -> List b)
   -> List a
   -> List b
-flatMap =
-  error "todo: Course.List#flatMap"
+flatMap f xs =
+  flatten (map f xs)
+
+-- xs.map(f).flatten
+
+-- (a -> List b) -> List a -> List b
+
+-- flatMap (\a -> a :. a + 1 :. Nil) (1 :. 2 :. 3 :. Nil)
+-- 1 :. 2 :. 2 :. 3 :. 3 :. 4 :. Nil
+
+-- (map f) xs
+-- (a -> b) -> (List a -> List b)
+
+-- map (+1) (1 :. 2 :. 3 :. Nil)
+-- 2 :. 3 :. 4 :. Nil
 
 -- | Flatten a list of lists to a list (again).
 -- HOWEVER, this time use the /flatMap/ function that you just wrote.
@@ -214,8 +333,18 @@ flatMap =
 flattenAgain ::
   List (List a)
   -> List a
-flattenAgain =
-  error "todo: Course.List#flattenAgain"
+flattenAgain xxs =
+  flatMap id xxs
+
+-- join :: Monad m => m (m a) -> m a
+
+-- 1 :. 2 :. 3 :. Nil
+-- id 1 :. id 2 :. id 3 :. Nil
+
+-- flatMap :: (a -> List b) -> List a -> List b
+
+-- xs = (1 :. 2 :. Nil) :. (3 :. 4 :. Nil) :. Nil
+-- flatten xs = 1 :. 2 :. 3 :. 4 :. Nil
 
 -- | Convert a list of optional values to an optional list of values.
 --
@@ -242,8 +371,28 @@ flattenAgain =
 seqOptional ::
   List (Optional a)
   -> Optional (List a)
-seqOptional =
-  error "todo: Course.List#seqOptional"
+seqOptional xs =
+  -- twiceOptional
+
+  -- foldRight _cons (Full Nil) xs
+  error ""
+
+-- xs :: List (Optional Int)
+-- xs = Full 1 :. Empty :. Full 3 :. Nil
+
+-- length xs = 3
+
+-- seqOptional xs = Empty
+
+-- ys = Full 1 :. Full 2 :. Full 3 :. Nil
+-- seqOptional ys = Full (1 :. 2 :. 3 :. Nil)
+
+-- List (Optional a)
+-- Optional (List a)
+
+-- Optional (List a)
+
+-- seqOptional Nil = Full Nil
 
 -- | Find the first element in the list matching the predicate.
 --
