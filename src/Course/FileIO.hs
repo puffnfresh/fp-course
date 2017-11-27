@@ -80,7 +80,10 @@ the contents of c
 main ::
   IO ()
 main =
-  error "todo: Course.FileIO#main"
+  getArgs >>= \args ->
+    case args of
+      (fn :. Nil) -> run fn
+      _ -> putStrLn "usage: filename"
 
 type FilePath =
   Chars
@@ -107,7 +110,9 @@ getFile ::
   FilePath
   -> IO (FilePath, Chars)
 getFile =
-  error "todo: Course.FileIO#getFile"
+  (\c -> (fn, c)) <$> readFile fn
+
+-- lift2 (<$>) (,) readFile
 
 -- Given a list of (file name and file contents), print each.
 -- Use @printFile@.
@@ -123,5 +128,5 @@ printFile ::
   FilePath
   -> Chars
   -> IO ()
-printFile =
-  error "todo: Course.FileIO#printFile"
+printFile fn content =
+  putStrLn ("============ " ++ fn)
