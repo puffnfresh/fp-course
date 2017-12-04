@@ -93,8 +93,9 @@ type FilePath =
 run ::
   FilePath
   -> IO ()
-run =
-  error "todo: Course.FileIO#run"
+run fn =
+  readFile fn >>= \c ->
+    getFiles (lines c) >>= printFiles
 
 -- Given a list of file names, return list of (file name and file contents).
 -- Use @getFile@.
@@ -102,7 +103,7 @@ getFiles ::
   List FilePath
   -> IO (List (FilePath, Chars))
 getFiles =
-  error "todo: Course.FileIO#getFiles"
+  sequence . (<$>) getFile
 
 -- Given a file name, return (file name and file contents).
 -- Use @readFile@.
@@ -110,9 +111,7 @@ getFile ::
   FilePath
   -> IO (FilePath, Chars)
 getFile =
-  (\c -> (fn, c)) <$> readFile fn
-
--- lift2 (<$>) (,) readFile
+  lift2 (<$>) (,) readFile
 
 -- Given a list of (file name and file contents), print each.
 -- Use @printFile@.
@@ -120,7 +119,7 @@ printFiles ::
   List (FilePath, Chars)
   -> IO ()
 printFiles =
-  error "todo: Course.FileIO#printFiles"
+  void . sequence . (uncurry printFile <$>)
 
 -- Given the file name, and file contents, print them.
 -- Use @putStrLn@.
@@ -128,5 +127,8 @@ printFile ::
   FilePath
   -> Chars
   -> IO ()
-printFile fn content =
-  putStrLn ("============ " ++ fn)
+printFile fn c =
+  putStrLn ("============ " ++ fn) >>
+    putStrLn c
+
+-- assert: ["======== hello", "world"]
