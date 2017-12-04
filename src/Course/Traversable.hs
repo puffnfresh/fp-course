@@ -30,6 +30,9 @@ class Functor t => Traversable t where
     -> t a
     -> f (t b)
 
+-- Foldable f
+-- (Functor f, Foldable f) => Traversable f
+
 instance Traversable List where
   traverse ::
     Applicative f =>
@@ -37,7 +40,16 @@ instance Traversable List where
     -> List a
     -> f (List b)
   traverse f =
-    foldRight (\a b -> (:.) <$> f a <*> b) (pure Nil)
+    foldRight (\a b -> ((:.) <$> f a) <*> b) (pure Nil)
+
+-- data ExactlyOne a = ExactlyOne a deriving (Eq, Show)
+
+-- case x of
+--   ExactlyOne a -> a
+
+-- runExactlyOne
+
+-- ExactlyOne
 
 instance Traversable ExactlyOne where
   traverse ::
@@ -45,8 +57,8 @@ instance Traversable ExactlyOne where
     (a -> f b)
     -> ExactlyOne a
     -> f (ExactlyOne b)
-  traverse =
-    error "todo: Course.Traversable traverse#instance ExactlyOne"
+  traverse f =
+    (ExactlyOne <$>) . f . runExactlyOne
 
 instance Traversable Optional where
   traverse ::
