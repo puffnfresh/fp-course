@@ -368,14 +368,38 @@ flattenAgain xxs =
 --
 -- >>> seqOptional (Empty :. map Full infinity)
 -- Empty
+
+-- >>> seqOptional (Full "Brian" :. Empty :. Nil)
+-- 
+
+-- >>> seqOptional (Full "Brian" :. Full "McKenna" :. Nil)
+
 seqOptional ::
   List (Optional a)
   -> Optional (List a)
-seqOptional xs =
-  -- twiceOptional
+seqOptional =
+  foldRight (twiceOptional (:.)) (Full Nil)
 
-  -- foldRight _cons (Full Nil) xs
-  error ""
+-- seqOptional (Full 1 :. Full 2 :. Nil)
+-- foldRight _todo (Full Nil) (Full 1 :. Full 2 :. Nil)
+
+-- _todo (Full 1) (_todo (Full 2) (Full Nil))
+
+
+-- seqOptional (Full 2 :. Nil)
+
+-- seqOptionalFull2 =
+--   twiceOptional _todo (Full 2) (Full Nil)
+
+-- Full [2]
+
+-- property-based testing
+-- Hedgehog
+-- QuickCheck
+-- ScalaCheck
+-- my_test =
+--   forAll (\a -> twiceOptional const (a :: Optional Int) a === a)
+
 
 -- xs :: List (Optional Int)
 -- xs = Full 1 :. Empty :. Full 3 :. Nil
