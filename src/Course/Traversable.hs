@@ -60,14 +60,21 @@ instance Traversable ExactlyOne where
   traverse f =
     (ExactlyOne <$>) . f . runExactlyOne
 
+-- fmap = <$>
+-- apply = <*>
+
 instance Traversable Optional where
   traverse ::
     Applicative f =>
     (a -> f b)
     -> Optional a
     -> f (Optional b)
-  traverse =
-    error "todo: Course.Traversable traverse#instance Optional"
+  traverse f =
+    optional ((Full <$>) . f) (pure Empty)
+
+optional :: (a -> b) -> b -> Optional a -> b
+optional f b =
+  (?? b) . mapOptional f
 
 -- | Sequences a traversable value of structures to a structure of a traversable value.
 --
