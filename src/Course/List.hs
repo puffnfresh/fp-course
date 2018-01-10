@@ -438,8 +438,12 @@ find ::
   (a -> Bool)
   -> List a
   -> Optional a
-find =
-  error "todo: Course.List#find"
+find f =
+  headOptional . filter f
+  -- foldRight (\a b -> if f a then Full a else b) Empty
+
+headOptional =
+  headOr Empty . map Full
 
 -- | Determine if the length of the given list is greater than 4.
 --
