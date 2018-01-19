@@ -461,8 +461,21 @@ headOptional =
 lengthGT4 ::
   List a
   -> Bool
+-- lengthGT4 (_ :. _ :. _ :. _ :. _ :. _) =
+--   True
+-- lengthGT4 _ =
+--   False
 lengthGT4 =
-  error "todo: Course.List#lengthGT4"
+  (== 5) . length . take 5
+--   not . isEmpty . drop 4
+
+--   length (take 5 xs) == 5
+--  not (isEmpty (drop 4 xs))
+
+--   let n = foldRight (\a b -> b - 1) 4 xs
+--   in n < 0
+
+--  error "todo: Course.List#lengthGT4"
 
 -- | Reverse a list.
 --
