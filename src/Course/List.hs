@@ -492,7 +492,21 @@ reverse ::
   List a
   -> List a
 reverse =
-  error "todo: Course.List#reverse"
+  foldLeft (flip (:.)) Nil
+
+-- xs = 1 : 2 : 3 : Nil
+-- x = Nil
+
+-- xs = 2 : 3 : Nil
+-- x = 1 : Nil
+
+-- xs = 3 : Nil
+-- x = 2 : 1 : Nil
+
+-- x = Nil
+-- for a in xs:
+--   x = f(x, a) -- f :: List a -> a -> List a
+-- return x
 
 -- | Produce an infinite `List` that seeds with the given value at its head,
 -- then runs the given function for subsequent elements
@@ -514,14 +528,19 @@ produce f x = x :. produce f (f x)
 -- >>> notReverse Nil
 -- []
 --
--- prop> let types = x :: List Int in notReverse x ++ notReverse y == notReverse (y ++ x)
+-- prop> let types = x :: List Int in
+-- notReverse x ++ notReverse y == notReverse (y ++ x)
+
+-- drop 1 x ++ drop 1 y == drop 1 (y ++ x)
+-- take 1 x ++ take 1 y == take 1 (y ++ x)
+
 --
 -- prop> let types = x :: Int in notReverse (x :. Nil) == x :. Nil
 notReverse ::
   List a
   -> List a
 notReverse =
-  error "todo: Is it even possible?"
+  drop 1
 
 ---- End of list exercises
 
