@@ -91,7 +91,7 @@ sequenceA ::
   t (f a)
   -> f (t a)
 sequenceA =
-  error "todo: Course.Traversable#sequenceA"
+  traverse id
 
 instance (Traversable f, Traversable g) =>
   Traversable (Compose f g) where
