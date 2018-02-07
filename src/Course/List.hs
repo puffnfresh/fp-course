@@ -534,8 +534,11 @@ produce f x = x :. produce f (f x)
 -- drop 1 x ++ drop 1 y == drop 1 (y ++ x)
 -- take 1 x ++ take 1 y == take 1 (y ++ x)
 
+-- reverse x ++ reverse y == reverse (y ++ x)
+
 --
--- prop> let types = x :: Int in notReverse (x :. Nil) == x :. Nil
+-- prop> let types = x :: Int in
+-- notReverse (x :. Nil) == x :. Nil
 notReverse ::
   List a
   -> List a
