@@ -33,7 +33,6 @@ import qualified Numeric as N
 -- The custom list type
 data List t =
   Nil
--- | (:.) t (List t)
   | t :. List t
   deriving (Eq, Ord)
 
@@ -357,8 +356,8 @@ find ::
   (a -> Bool)
   -> List a
   -> Optional a
-find =
-  error "todo: Course.List#find"
+find p =
+  foldRight (\a o -> if p a then Full a else o) Empty
 
 -- | Determine if the length of the given list is greater than 4.
 --
@@ -376,8 +375,10 @@ find =
 lengthGT4 ::
   List a
   -> Bool
-lengthGT4 =
-  error "todo: Course.List#lengthGT4"
+lengthGT4 (_ :. _ :. _ :. _ :. _ :. _) =
+  True
+lengthGT4 _ =
+  False
 
 -- | Reverse a list.
 --
@@ -394,7 +395,20 @@ reverse ::
   List a
   -> List a
 reverse =
-  error "todo: Course.List#reverse"
+  foldLeft (flip (:.)) Nil
+
+-- var x = [];
+-- foreach(a in xs) {
+--   x = cons(a, x);
+-- }
+-- return x;
+
+-- 1 :. 2 :. 3 :. Nil
+
+-- accum = []
+-- accum = 1 :. []
+-- accum = 2 :. 1 :. []
+-- accum = 3 :. 2 :. 1 :. []
 
 -- | Produce an infinite `List` that seeds with the given value at its head,
 -- then runs the given function for subsequent elements
@@ -416,14 +430,19 @@ produce f x = x :. produce f (f x)
 -- >>> notReverse Nil
 -- []
 --
--- prop> let types = x :: List Int in notReverse x ++ notReverse y == notReverse (y ++ x)
+-- prop> let types = x :: List Int in
+--   notReverse x ++ notReverse y == notReverse (y ++ x)
 --
--- prop> let types = x :: Int in notReverse (x :. Nil) == x :. Nil
+-- prop> let types = x :: Int in
+--   notReverse (x :. Nil) == x :. Nil
 notReverse ::
   List a
   -> List a
 notReverse =
-  error "todo: Is it even possible?"
+  reverse
+
+-- notReverse (1 :. 2 :. Nil) ++ notReverse (3 :. 4 :. Nil)
+-- notReverse (3 :. 4 :. 1 :. 2 :. Nil)
 
 ---- End of list exercises
 
