@@ -13,6 +13,7 @@ import Course.Monad
 
 newtype Compose f g a =
   Compose (f (g a))
+  deriving Show
 
 -- Implement a Functor instance for Compose
 instance (Functor f, Functor g) =>
@@ -37,5 +38,5 @@ instance (Applicative f, Applicative g) =>
 instance (Monad f, Monad g) =>
   Monad (Compose f g) where
 -- Implement the (=<<) function for a Monad instance for Compose
-  (=<<) =
-    error "todo: Course.Compose (<<=)#instance (Compose f g)"
+  (=<<) f (Compose fga) =
+    error "test"
