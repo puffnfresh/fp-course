@@ -125,7 +125,7 @@ valueParser ::
   a
   -> Parser a
 valueParser =
-  error "todo: Course.Parser#valueParser"
+  P . flip Result
 
 -- | Return a parser that succeeds with a character off the input or fails with an error if the input is empty.
 --
