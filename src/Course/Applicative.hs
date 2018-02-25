@@ -242,6 +242,18 @@ lift4 ::
 lift4 f fa fb fc fd =
   f <$> fa <*> fb <*> fc <*> fd
 
+lift5 ::
+  Applicative f =>
+  (a -> b -> c -> d -> e -> g)
+  -> f a
+  -> f b
+  -> f c
+  -> f d
+  -> f e
+  -> f g
+lift5 f fa fb fc fd fe =
+  f <$> fa <*> fb <*> fc <*> fd <*> fe
+
 -- | Apply, discarding the value of the first argument.
 -- Pronounced, right apply.
 --
