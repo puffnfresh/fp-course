@@ -8,6 +8,8 @@ import qualified Control.Monad as M
 import Course.Core
 import qualified Prelude as P
 
+-- data Optional a = Full a | Empty
+
 data ExactlyOne a = ExactlyOne a deriving (Eq, Show)
 
 runExactlyOne :: ExactlyOne a -> a

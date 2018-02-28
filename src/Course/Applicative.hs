@@ -31,6 +31,10 @@ class Functor f => Applicative f where
     -> f a
     -> f b
 
+--   (a -> b) -> (f a -> f b)
+
+-- f (a -> b) -> (f a -> f b)
+
 infixl 4 <*>
 
 -- | Witness that all things with (<*>) and pure also have (<$>).
@@ -48,8 +52,8 @@ infixl 4 <*>
   (a -> b)
   -> f a
   -> f b
-(<$$>) =
-  error "todo: Course.Applicative#(<$$>)"
+(<$$>) g fa =
+  pure g <*> fa
 
 -- | Insert into ExactlyOne.
 --
@@ -62,13 +66,13 @@ instance Applicative ExactlyOne where
     a
     -> ExactlyOne a
   pure =
-    error "todo: Course.Applicative pure#instance ExactlyOne"
+    ExactlyOne
   (<*>) :: 
     ExactlyOne (a -> b)
     -> ExactlyOne a
     -> ExactlyOne b
-  (<*>) =
-    error "todo: Course.Applicative (<*>)#instance ExactlyOne"
+  (<*>) (ExactlyOne f) (ExactlyOne a) =
+    ExactlyOne (f a)
 
 -- | Insert into a List.
 --
