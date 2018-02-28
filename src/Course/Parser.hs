@@ -124,8 +124,8 @@ natural =
 valueParser ::
   a
   -> Parser a
-valueParser =
-  P . flip Result
+valueParser a =
+  P (\inp -> Result inp a)
 
 -- | Return a parser that succeeds with a character off the input or fails with an error if the input is empty.
 --
@@ -137,7 +137,9 @@ valueParser =
 character ::
   Parser Char
 character =
-  error "todo: Course.Parser#character"
+  P (\inp -> case inp of
+               h :. t -> Result t h
+               Nil -> UnexpectedEof)
 
 -- | Return a parser that maps any succeeding result with the given function.
 --
@@ -150,8 +152,8 @@ mapParser ::
   (a -> b)
   -> Parser a
   -> Parser b
-mapParser =
-  error "todo: Course.Parser#mapParser"
+mapParser f (P p) =
+  P (\i -> onResult (p i) (\i' -> Result i' . f))
 
 -- | Return a parser that puts its input into the given parser and
 --
@@ -178,8 +180,8 @@ bindParser ::
   (a -> Parser b)
   -> Parser a
   -> Parser b
-bindParser =
-  error "todo: Course.Parser#bindParser"
+bindParser f (P p) =
+  P (\i -> onResult (p i) (\i' a -> parse (f a) i'))
 
 -- | Return a parser that puts its input into the given parser and
 --
@@ -199,8 +201,8 @@ bindParser =
   Parser a
   -> Parser b
   -> Parser b
-(>>>) =
-  error "todo: Course.Parser#(>>>)"
+(>>>) pa pb =
+  bindParser (const pb) pa
 
 -- | Return a parser that tries the first parser for a successful value.
 --
@@ -223,8 +225,14 @@ bindParser =
   Parser a
   -> Parser a
   -> Parser a
-(|||) =
-  error "todo: Course.Parser#(|||)"
+(|||) (P x) (P y) =
+  P (\i -> let x' = x i
+           in if isErrorResult x' then y i else x')
+
+-- let a =
+--      1
+--     b = 2
+-- in a + b
 
 infixl 3 |||
 
@@ -252,8 +260,8 @@ infixl 3 |||
 list ::
   Parser a
   -> Parser (List a)
-list =
-  error "todo: Course.Parser#list"
+list p =
+  list1 p ||| valueParser Nil
 
 -- | Return a parser that produces at least one value from the given parser then
 -- continues producing a list of values from the given parser (to ultimately produce a non-empty list).
@@ -271,8 +279,8 @@ list =
 list1 ::
   Parser a
   -> Parser (List a)
-list1 =
-  error "todo: Course.Parser#list1"
+list1 p =
+  bindParser (\a -> mapParser (\as -> a :. as) (list p)) p
 
 -- | Return a parser that produces a character but fails if
 --
@@ -290,8 +298,8 @@ list1 =
 satisfy ::
   (Char -> Bool)
   -> Parser Char
-satisfy =
-  error "todo: Course.Parser#satisfy"
+satisfy f =
+  bindParser (\a -> if f a then valueParser a else unexpectedCharParser a) character
 
 -- | Return a parser that produces the given character but fails if
 --
@@ -302,8 +310,8 @@ satisfy =
 -- /Tip:/ Use the @satisfy@ function.
 is ::
   Char -> Parser Char
-is =
-  error "todo: Course.Parser#is"
+is c =
+  satisfy (\a -> a == c)
 
 -- | Return a parser that produces a character between '0' and '9' but fails if
 --
