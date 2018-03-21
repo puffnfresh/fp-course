@@ -124,8 +124,8 @@ natural =
 valueParser ::
   a
   -> Parser a
-valueParser a =
-  P (\inp -> Result inp a)
+valueParser =
+  P . flip Result
 
 -- | Return a parser that succeeds with a character off the input or fails with an error if the input is empty.
 --
@@ -137,9 +137,10 @@ valueParser a =
 character ::
   Parser Char
 character =
-  P (\inp -> case inp of
-               h :. t -> Result t h
-               Nil -> UnexpectedEof)
+  P (\i -> case i of
+        h :. t -> Result t h
+        Nil -> UnexpectedEof
+        )
 
 -- | Return a parser that maps any succeeding result with the given function.
 --
@@ -152,8 +153,10 @@ mapParser ::
   (a -> b)
   -> Parser a
   -> Parser b
-mapParser f (P p) =
-  P (\i -> onResult (p i) (\i' -> Result i' . f))
+mapParser f p =
+  P (\i -> onResult (parse p i) (g . Result))
+  where
+    g h = \a -> h (f a)
 
 -- | Return a parser that puts its input into the given parser and
 --
@@ -180,8 +183,8 @@ bindParser ::
   (a -> Parser b)
   -> Parser a
   -> Parser b
-bindParser f (P p) =
-  P (\i -> onResult (p i) (\i' a -> parse (f a) i'))
+bindParser f p =
+  P (\i -> onResult (parse p i) (\j a -> parse (f a) j))
 
 -- | Return a parser that puts its input into the given parser and
 --
@@ -225,14 +228,11 @@ bindParser f (P p) =
   Parser a
   -> Parser a
   -> Parser a
-(|||) (P x) (P y) =
-  P (\i -> let x' = x i
-           in if isErrorResult x' then y i else x')
-
--- let a =
---      1
---     b = 2
--- in a + b
+(|||) pa pb =
+  P (\i -> let ra = parse pa i
+           in if isErrorResult ra
+              then parse pb i
+              else ra)
 
 infixl 3 |||
 
@@ -260,8 +260,8 @@ infixl 3 |||
 list ::
   Parser a
   -> Parser (List a)
-list p =
-  list1 p ||| valueParser Nil
+list =
+  (||| valueParser Nil) . list1
 
 -- | Return a parser that produces at least one value from the given parser then
 -- continues producing a list of values from the given parser (to ultimately produce a non-empty list).
@@ -279,8 +279,11 @@ list p =
 list1 ::
   Parser a
   -> Parser (List a)
-list1 p =
-  bindParser (\a -> mapParser (\as -> a :. as) (list p)) p
+list1 pa =
+  bindParser (\a -> mapParser (a :.) (list pa)) pa
+
+-- liftP2 :: (a -> b -> c) -> Parser a -> Parser b -> Parser c
+-- lift2 (:.) pa pla
 
 -- | Return a parser that produces a character but fails if
 --
@@ -298,8 +301,8 @@ list1 p =
 satisfy ::
   (Char -> Bool)
   -> Parser Char
-satisfy f =
-  bindParser (\a -> if f a then valueParser a else unexpectedCharParser a) character
+satisfy p =
+  bindParser (\c -> if p c then valueParser c else unexpectedCharParser c) character
 
 -- | Return a parser that produces the given character but fails if
 --
@@ -311,7 +314,7 @@ satisfy f =
 is ::
   Char -> Parser Char
 is c =
-  satisfy (\a -> a == c)
+  satisfy (== c)
 
 -- | Return a parser that produces a character between '0' and '9' but fails if
 --
@@ -323,7 +326,7 @@ is c =
 digit ::
   Parser Char
 digit =
-  error "todo: Course.Parser#digit"
+  satisfy isDigit
 
 --
 -- | Return a parser that produces a space character but fails if
@@ -336,7 +339,7 @@ digit =
 space ::
   Parser Char
 space =
-  error "todo: Course.Parser#space"
+  satisfy isSpace
 
 -- | Return a parser that produces one or more space characters
 -- (consuming until the first non-space) but fails if
@@ -349,7 +352,7 @@ space =
 spaces1 ::
   Parser Chars
 spaces1 =
-  error "todo: Course.Parser#spaces1"
+  list1 space
 
 -- | Return a parser that produces a lower-case character but fails if
 --
@@ -361,7 +364,7 @@ spaces1 =
 lower ::
   Parser Char
 lower =
-  error "todo: Course.Parser#lower"
+  satisfy isLower
 
 -- | Return a parser that produces an upper-case character but fails if
 --
@@ -373,7 +376,7 @@ lower =
 upper ::
   Parser Char
 upper =
-  error "todo: Course.Parser#upper"
+  satisfy isUpper
 
 -- | Return a parser that produces an alpha character but fails if
 --
@@ -385,7 +388,7 @@ upper =
 alpha ::
   Parser Char
 alpha =
-  error "todo: Course.Parser#alpha"
+  satisfy isAlpha
 
 -- | Return a parser that sequences the given list of parsers by producing all their results
 -- but fails on the first failing parser of the list.
