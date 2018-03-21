@@ -404,8 +404,10 @@ alpha =
 sequenceParser ::
   List (Parser a)
   -> Parser (List a)
-sequenceParser =
-  error "todo: Course.Parser#sequenceParser"
+sequenceParser ps =
+  foldRight (\p pl -> bindParser (\a -> mapParser (a :.) pl) p) (valueParser Nil) ps
+
+-- sequence
 
 -- | Return a parser that produces the given number of values off the given parser.
 -- This parser fails if the given parser fails in the attempt to produce the given number of values.
@@ -421,8 +423,8 @@ thisMany ::
   Int
   -> Parser a
   -> Parser (List a)
-thisMany =
-  error "todo: Course.Parser#thisMany"
+thisMany n =
+  sequenceParser . replicate n
 
 -- | Write a parser for Person.age.
 --
@@ -441,7 +443,7 @@ thisMany =
 ageParser ::
   Parser Int
 ageParser =
-  error "todo: Course.Parser#ageParser"
+  natural
 
 -- | Write a parser for Person.firstName.
 -- /First Name: non-empty string that starts with a capital letter and is followed by zero or more lower-case letters/
@@ -456,7 +458,19 @@ ageParser =
 firstNameParser ::
   Parser Chars
 firstNameParser =
-  error "todo: Course.Parser#firstNameParser"
+--  bindParser (\f -> mapParser (f :.) (list lower)) upper
+  lift2 (:.) upper (list lower)
+
+-- instance Monoid a => Monoid (Parser a) where
+--   mempty =
+--     valueParser mempty
+--   mappend a b =
+--     lift2 (<>) a b
+
+-- (\u v w x y z -> 3) <$> upper <*> list lower <*> a <*> b <*> c <*> d
+
+-- <upper :. list lower>
+-- idiom brackets
 
 -- | Write a parser for Person.surname.
 --
