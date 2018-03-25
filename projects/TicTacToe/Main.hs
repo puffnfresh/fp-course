@@ -100,6 +100,8 @@ boardWinner b =
   w P1 P2 P3
   <|> w P1 P4 P7
   <|> w P3 P6 P9
+  <|> w P2 P5 P8
+  <|> w P4 P5 P6
   <|> w P7 P8 P9
   <|> w P1 P5 P9
   <|> w P7 P5 P3
