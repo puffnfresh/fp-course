@@ -84,14 +84,35 @@ instance Applicative List where
   pure ::
     a
     -> List a
-  pure =
-    error "todo: Course.Applicative pure#instance List"
+  pure a =
+    a :. Nil
   (<*>) ::
     List (a -> b)
     -> List a
     -> List b
-  (<*>) =
-    error "todo: Course.Apply (<*>)#instance List"
+  (<*>) fns as =
+    flatMap (\fn -> map fn as) fns
+
+-- for {
+--   fn <- fns
+--   a <- as
+-- } yield fn(a)
+
+-- fns.flatMap(fn => as.map(fn))
+
+-- show :: Int -> String
+-- as :: List Int
+
+-- List String
+
+-- result = []
+-- for f in [(+1), (*2)]:
+--   for a in [1, 2, 3]:
+--     result.push(f(a))
+-- return result
+
+-- map :: (a -> b) -> List a -> List b
+-- flatMap :: (a -> List b) -> List a -> List b
 
 -- | Insert into an Optional.
 --
@@ -110,13 +131,16 @@ instance Applicative Optional where
     a
     -> Optional a
   pure =
-    error "todo: Course.Applicative pure#instance Optional"
+    Full
   (<*>) ::
     Optional (a -> b)
     -> Optional a
     -> Optional b
   (<*>) =
-    error "todo: Course.Apply (<*>)#instance Optional"
+    bindOptional (\fn -> mapOptional fn as) fns
+
+-- bindOptional :: (a -> Optional b) -> Optional a -> Optional b
+-- mapOptional :: (a -> b) -> Optional a -> Optional b
 
 -- | Insert into a constant function.
 --
