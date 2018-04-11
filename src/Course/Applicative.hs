@@ -31,6 +31,13 @@ class Functor f => Applicative f where
     -> f a
     -> f b
 
+-- (<*>) :: f (b -> c) -> f b -> f c
+
+-- (<$>) :: (a -> b) -> f a -> f b
+-- pure :: a -> f a
+-- (<*>) :: f (a -> b) -> f a -> f b
+
+
 --   (a -> b) -> (f a -> f b)
 
 -- f (a -> b) -> (f a -> f b)
@@ -136,7 +143,7 @@ instance Applicative Optional where
     Optional (a -> b)
     -> Optional a
     -> Optional b
-  (<*>) =
+  (<*>) fns as =
     bindOptional (\fn -> mapOptional fn as) fns
 
 -- bindOptional :: (a -> Optional b) -> Optional a -> Optional b
@@ -163,16 +170,24 @@ instance Applicative Optional where
 instance Applicative ((->) t) where
   pure ::
     a
-    -> ((->) t a)
+    -> t -> a
   pure =
-    error "todo: Course.Applicative pure#((->) t)"
+    const
   (<*>) ::
-    ((->) t (a -> b))
-    -> ((->) t a)
-    -> ((->) t b)
-  (<*>) =
-    error "todo: Course.Apply (<*>)#instance ((->) t)"
+    (t -> a -> b)
+    -> (t -> a)
+    -> t
+    -> b
+  (<*>) tab ta t =
+    tab t (ta t)
 
+-- tab = (*)
+-- ta = (+2)
+-- t = 3
+
+-- Function applicative
+-- Reader
+-- Configuration
 
 -- | Apply a binary function in the environment.
 --
@@ -199,8 +214,16 @@ lift2 ::
   -> f a
   -> f b
   -> f c
-lift2 =
-  error "todo: Course.Applicative#lift2"
+lift2 abc fa fb =
+  abc <$> fa <*> fb
+
+  -- TODO: Talk about pure
+
+-- (<$>) :: (a -> b     ) -> f a -> f b
+
+-- (<$>) :: (a -> (b -> c)) -> f a -> f (b -> c)
+
+-- lift2 :: (a -> b -> c) -> f a -> f b -> f c
 
 -- | Apply a ternary function in the environment.
 --
