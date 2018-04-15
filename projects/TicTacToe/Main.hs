@@ -1,3 +1,6 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
+
 module Main where
 
 import Control.Applicative
@@ -78,6 +81,80 @@ instance MovePositions Move9 where
   movePositions (Move9 p m) =
     p : movePositions m
 
+class TakeBack m m' | m -> m' where
+  takeBack :: m -> m'
+
+instance TakeBack Move2 Move1 where
+  takeBack (Move2 _ m') =
+    m'
+
+instance TakeBack Move3 Move2 where
+  takeBack (Move3 _ m') =
+    m'
+
+instance TakeBack Move4 Move3 where
+  takeBack (Move4 _ m') =
+    m'
+
+instance TakeBack Move5 Move4 where
+  takeBack (Move5 _ m') =
+    m'
+
+instance TakeBack Move6 Move5 where
+  takeBack (Move6 _ m') =
+    m'
+
+instance TakeBack Move7 Move6 where
+  takeBack (Move7 _ m') =
+    m'
+
+instance TakeBack Move8 Move7 where
+  takeBack (Move8 _ m') =
+    m'
+
+instance TakeBack Move9 Move8 where
+  takeBack (Move9 _ m') =
+    m'
+
+class Move m m' | m -> m' where
+  move :: Position -> m -> m'
+
+beginningMove :: MovePositions m => m -> Either MoveError m
+beginningMove m =
+  maybe (Right m) Left (checkPosition m)
+
+instance Move Move1 (Either MoveError Move2) where
+  move p =
+    beginningMove . Move2 p
+
+instance Move Move2 (Either MoveError Move3) where
+  move p =
+    beginningMove . Move3 p
+
+instance Move Move3 (Either MoveError Move4) where
+  move p =
+    beginningMove . Move4 p
+
+instance Move Move4 (CheckedMove Move5) where
+  move p =
+    check . Move5 p
+
+instance Move Move5 (CheckedMove Move6) where
+  move p =
+    check . Move6 p
+
+instance Move Move6 (CheckedMove Move7) where
+  move p =
+    check . Move7 p
+
+instance Move Move7 (CheckedMove Move8) where
+  move p =
+    check . Move8 p
+
+instance Move Move8 (CheckedMove Move9) where
+  move p =
+    check . Move9 p
+
 data Position
   = P1 | P2 | P3
   | P4 | P5 | P6
@@ -144,14 +221,19 @@ toPlayers :: MovePositions m => m -> [(Position, Player)]
 toPlayers m =
   reverse (zip (reverse (movePositions m)) (cycle [X, O]))
 
+checkPosition :: MovePositions m => m -> Maybe MoveError
+checkPosition m =
+  PositionNonEmpty <$> inTail isTaken (toPlayers m)
+  where
+    isTaken (po, _) xs =
+      lookup po xs
+
 check :: MovePositions m => m -> CheckedMove m
 check m =
-  maybe validMove (BadMove . PositionNonEmpty) (inTail isTaken (toPlayers m))
+  maybe validMove BadMove (checkPosition m)
   where
     validMove =
       maybe (UnfinishedBoard m) (FinishedBoard . WonBoard m) (boardWinner m)
-    isTaken (po, _) xs =
-      lookup po xs
 
 inTail :: (a -> [a] -> Maybe b) -> [a] -> Maybe b
 inTail _ [] =
