@@ -301,8 +301,8 @@ list1 pa =
 satisfy ::
   (Char -> Bool)
   -> Parser Char
-satisfy p =
-  bindParser (\c -> if p c then valueParser c else unexpectedCharParser c) character
+satisfy f =
+  (\c -> if f c then valueParser c else unexpectedCharParser c) =<< character
 
 -- | Return a parser that produces the given character but fails if
 --
@@ -614,7 +614,7 @@ instance Functor Parser where
     -> Parser a
     -> Parser b
   (<$>) =
-     error "todo: Course.Parser (<$>)#instance Parser"
+    mapParser
 
 -- | Write an Applicative functor instance for a @Parser@.
 -- /Tip:/ Use @bindParser@ and @valueParser@.
@@ -623,13 +623,13 @@ instance Applicative Parser where
     a
     -> Parser a
   pure =
-    error "todo: Course.Parser pure#instance Parser"
+    valueParser
   (<*>) ::
     Parser (a -> b)
     -> Parser a
     -> Parser b
   (<*>) =
-    error "todo: Course.Parser (<*>)#instance Parser"
+    (<**>)
 
 -- | Write a Monad instance for a @Parser@.
 instance Monad Parser where
@@ -638,4 +638,4 @@ instance Monad Parser where
     -> Parser a
     -> Parser b
   (=<<) =
-    error "todo: Course.Parser (=<<)#instance Parser"
+    bindParser
