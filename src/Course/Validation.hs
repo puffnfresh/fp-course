@@ -45,6 +45,9 @@ isError (Value _) = False
 isValue :: Validation a -> Bool
 isValue = not . isError
 
+($$$) :: Int -> Int -> Int
+($$$) a b = a + b
+
 -- | Maps a function on a validation's value side.
 --
 -- >>> mapValidation (+10) (Error "message")
