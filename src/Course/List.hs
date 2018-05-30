@@ -33,7 +33,7 @@ import qualified Numeric as N
 -- The custom list type
 data List t =
   Nil
-  | t :. List t
+  | (:.) t (List t)
   deriving (Eq, Ord)
 
 -- Right-associative
@@ -49,10 +49,34 @@ infinity =
   let inf x = x :. inf (x+1)
   in inf 0
 
+-- CONSTRUCTOR REPLACEMENT
+
+-- xs = 1 :. 2 :. 3 :. Nil
+
+-- foldRight f a xs
+
+-- 1 `f` (2 `f` (3 `f` a))
+-- f 1 (f 2 (f 3 a))
+
+-- 1 - (2 - (3 - 0))
+
 -- functions over List that you may consider using
 foldRight :: (a -> b -> b) -> b -> List a -> b
 foldRight _ b Nil      = b
 foldRight f b (h :. t) = f h (foldRight f b t)
+
+-- FOR LOOP
+
+-- xs = 1 :. 2 :. 3 :. Nil
+
+-- foldLeft f a xs
+
+-- a
+-- f a 1
+-- f (f a 1) 2
+-- f (f (f a 1) 2) 3
+
+-- ((0 - 1) - 2) - 3
 
 foldLeft :: (b -> a -> b) -> b -> List a -> b
 foldLeft _ b Nil      = b
@@ -76,7 +100,14 @@ headOr ::
   -> List a
   -> a
 headOr =
-  error "todo: Course.List#headOr"
+  foldRight const
+
+-- 1 :. 2 :. 3 :. Nil
+
+-- 1 `const` (2 `const` (3 `const` a))
+
+-- Nil
+-- a
 
 -- | The product of the elements of a list.
 --
@@ -92,7 +123,15 @@ product ::
   List Int
   -> Int
 product =
-  error "todo: Course.List#product"
+  foldRight (*) 1
+
+-- 1 :. 2 :. 3 :. Nil
+-- 1 *  2 *  3 *  1
+
+-- 1 = 1
+-- 1 * 1 = 1
+-- 1 * 2 = 2
+-- 2 * 3 = 6
 
 -- | Sum the elements of the list.
 --
@@ -107,7 +146,10 @@ sum ::
   List Int
   -> Int
 sum =
-  error "todo: Course.List#sum"
+  foldRight (+) 0
+
+-- 1 :. 2 :. 3 :. Nil
+-- 1 +  2 +  3 +  0
 
 -- | Return the length of the list.
 --
