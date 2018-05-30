@@ -217,6 +217,23 @@ lift2 ::
 lift2 abc fa fb =
   abc <$> fa <*> fb
 
+-- <A, B, C> Optional<C> lift2(
+--   Function2<A, B, C> f,
+--   Optional<A> oa, 
+--   Optional<B> ob
+-- );
+
+-- pure :: a -> f a
+-- (<$>) :: (a -> b) -> (f a -> f b)
+-- lift2 :: (a -> b -> c) -> (f a -> f b -> f c)
+-- lift3 :: (a -> b -> c -> d) -> (f a -> f b -> f c -> f d)
+
+-- a = Int
+-- b = Bool
+-- c = String
+-- f = Optional
+
+
   -- TODO: Talk about pure
 
 -- (<$>) :: (a -> b     ) -> f a -> f b
@@ -254,8 +271,12 @@ lift3 ::
   -> f b
   -> f c
   -> f d
-lift3 =
-  error "todo: Course.Applicative#lift3"
+lift3 g fa fb fc =
+  -- g <$> fa <*> fb <*> fc
+
+  pure g <*> fa <*> fb <*> fc
+
+  -- lift2 g fa fb <*> fc
 
 -- | Apply a quaternary function in the environment.
 --
