@@ -140,10 +140,8 @@ coproduct _ gac (InR ga) =
 
 instance (Functor f, Functor g) =>
   Functor (Coproduct f g) where
-  (<$>) f (InL fa) =
-    InL (f <$> fa)
-  (<$>) f (InR ga) =
-    InR (f <$> ga)
+  (<$>) f =
+    coproduct (InL . (f <$>)) (InR . (f <$>))
 
 instance (Traversable f, Traversable g) =>
   Traversable (Coproduct f g) where
@@ -153,4 +151,6 @@ instance (Traversable f, Traversable g) =>
     Coproduct f g a ->
     h (Coproduct f g b)
   traverse f =
-    coproduct ((InL <$>) . traverse f) ((InR <$>) . traverse f)
+    -- traverse f fa :: h (f b)
+    -- InL <$> traverse f fa :: h (Coproduct f g b)
+    coproduct (\fa -> InL <$> traverse f fa) (\ga -> InR <$> traverse f ga)
