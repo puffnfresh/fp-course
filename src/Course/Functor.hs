@@ -25,6 +25,8 @@ class Functor f where
     -> f a
     -> f b
 
+-- (<$>) :: (a -> b) -> (f a -> f b)
+
 infixl 4 <$>
 
 -- $setup
@@ -44,6 +46,8 @@ instance Functor ExactlyOne where
   (<$>) f (ExactlyOne a) =
     ExactlyOne (f a)
 
+-- (<$>) :: (a -> b) -> (ExactlyOne a -> ExactlyOne b)
+
 -- | Maps a function on the List functor.
 --
 -- >>> (+1) <$> Nil
@@ -58,6 +62,8 @@ instance Functor List where
     -> List b
   (<$>) =
     map
+
+-- (<$>) :: (a -> b) -> (List a -> List b)
 
 -- | Maps a function on the Optional functor.
 --
@@ -87,6 +93,8 @@ instance Functor ((->) t) where
   (<$>) =
     (.)
 
+-- (<$>) :: (a -> b) -> ((t -> a) -> (t -> b))
+
 -- | Anonymous map. Maps a constant value on a functor.
 --
 -- >>> 7 <$ (1 :. 2 :. 3 :. Nil)
@@ -100,8 +108,17 @@ instance Functor ((->) t) where
   a
   -> f b
   -> f a
-(<$) =
-  error "todo: Course.Functor#(<$)"
+(<$) a =
+  (const a <$>)
+
+-- f = Optional
+-- a = Int
+-- b = Bool
+
+-- (<$) :: Int -> Optional Bool -> Optional Int
+-- 0
+-- Full True
+-- Full 0
 
 -- | Anonymous map producing unit value.
 --
@@ -121,7 +138,7 @@ void ::
   f a
   -> f ()
 void =
-  error "todo: Course.Functor#void"
+  (() <$)
 
 -----------------------
 -- SUPPORT LIBRARIES --

@@ -35,6 +35,18 @@ class Functor f => Applicative f where
     -> f a
     -> f b
 
+-- pure  ~ lift0
+-- (<$>) ~ lift1
+-- lift2 = lift2
+
+-- pure :: a -> f a
+-- (<$>) :: (a -> b) -> (f a -> f b)
+-- lift2 :: (a -> b -> c) -> (f a -> f b -> f c)
+-- lift3 :: (a -> b -> c -> d) -> (f a -> f b -> f c -> f d)
+
+
+-- (<*>) :: f (a -> b) -> (f a -> f b)
+
 infixl 4 <*>
 
 -- | Insert into ExactlyOne.
@@ -48,13 +60,13 @@ instance Applicative ExactlyOne where
     a
     -> ExactlyOne a
   pure =
-    error "todo: Course.Applicative pure#instance ExactlyOne"
+    ExactlyOne
   (<*>) :: 
     ExactlyOne (a -> b)
     -> ExactlyOne a
     -> ExactlyOne b
-  (<*>) =
-    error "todo: Course.Applicative (<*>)#instance ExactlyOne"
+  (<*>) (ExactlyOne f) (ExactlyOne a) =
+    ExactlyOne (f a)
 
 -- | Insert into a List.
 --
@@ -67,13 +79,15 @@ instance Applicative List where
     a
     -> List a
   pure =
-    error "todo: Course.Applicative pure#instance List"
+    (:. Nil)
   (<*>) ::
     List (a -> b)
     -> List a
     -> List b
-  (<*>) =
-    error "todo: Course.Apply (<*>)#instance List"
+  (<*>) fs as =
+    flatMap (flip map as) fs
+
+-- Optional ~ List with at most one element
 
 -- | Insert into an Optional.
 --
@@ -92,13 +106,13 @@ instance Applicative Optional where
     a
     -> Optional a
   pure =
-    error "todo: Course.Applicative pure#instance Optional"
+    Full
   (<*>) ::
     Optional (a -> b)
     -> Optional a
     -> Optional b
-  (<*>) =
-    error "todo: Course.Apply (<*>)#instance Optional"
+  (<*>) o a =
+    bindOptional (flip mapOptional a) o
 
 -- | Insert into a constant function.
 --
@@ -121,16 +135,17 @@ instance Applicative Optional where
 instance Applicative ((->) t) where
   pure ::
     a
-    -> ((->) t a)
+    -> t 
+    -> a
   pure =
-    error "todo: Course.Applicative pure#((->) t)"
+    const
   (<*>) ::
-    ((->) t (a -> b))
-    -> ((->) t a)
-    -> ((->) t b)
-  (<*>) =
-    error "todo: Course.Apply (<*>)#instance ((->) t)"
-
+    (t -> a -> b)
+    -> (t -> a)
+    -> t
+    -> b
+  (<*>) tab ta t =
+    tab t (ta t)
 
 -- | Apply a binary function in the environment.
 --
@@ -157,8 +172,17 @@ lift2 ::
   -> f a
   -> f b
   -> f c
-lift2 =
-  error "todo: Course.Applicative#lift2"
+lift2 abc fa fb =
+  abc <$> fa <*> fb
+
+-- pure f <*> fb = f <$> fb
+
+-- pure abc :: f (a -> b -> c)
+
+-- (<*>) :: f (a -> b -> c) -> f a -> f (b -> c)
+-- pure abc <*> fa :: f (b -> c)
+-- abc <$> fa :: f (b -> c)
+-- pure abc <*> fa <*> fb :: f c
 
 -- | Apply a ternary function in the environment.
 -- /can be written using `lift2` and `(<*>)`./
@@ -190,8 +214,8 @@ lift3 ::
   -> f b
   -> f c
   -> f d
-lift3 =
-  error "todo: Course.Applicative#lift3"
+lift3 abcd fa fb =
+  (lift2 abcd fa fb <*>)
 
 -- | Apply a quaternary function in the environment.
 -- /can be written using `lift3` and `(<*>)`./
@@ -224,8 +248,8 @@ lift4 ::
   -> f c
   -> f d
   -> f e
-lift4 =
-  error "todo: Course.Applicative#lift4"
+lift4 abcde fa fb fc =
+  (lift3 abcde fa fb fc <*>)
 
 -- | Apply a nullary function in the environment.
 lift0 ::
@@ -233,7 +257,7 @@ lift0 ::
   a
   -> f a
 lift0 =
-  error "todo: Course.Applicative#lift0"
+  pure
 
 -- | Apply a unary function in the environment.
 -- /can be written using `lift0` and `(<*>)`./
@@ -252,7 +276,7 @@ lift1 ::
   -> f a
   -> f b
 lift1 =
-  error "todo: Course.Applicative#lift1"
+  (<$>)
 
 -- | Apply, discarding the value of the first argument.
 -- Pronounced, right apply.
@@ -278,7 +302,7 @@ lift1 =
   -> f b
   -> f b
 (*>) =
-  error "todo: Course.Applicative#(*>)"
+  lift2 (flip const)
 
 -- | Apply, discarding the value of the second argument.
 -- Pronounced, left apply.
@@ -304,7 +328,7 @@ lift1 =
   -> f a
   -> f b
 (<*) =
-  error "todo: Course.Applicative#(<*)"
+  lift2 const
 
 -- | Sequences a list of structures to a structure of list.
 --
@@ -327,7 +351,7 @@ sequence ::
   List (f a)
   -> f (List a)
 sequence =
-  error "todo: Course.Applicative#sequence"
+  foldRight (lift2 (:.)) (pure Nil)
 
 -- | Replicate an effect a given number of times.
 --
