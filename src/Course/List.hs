@@ -379,6 +379,13 @@ seqOptional ::
   -> Optional (List a)
 seqOptional =
   foldRight (twiceOptional (:.)) (Full Nil)
+  -- sequence
+
+-- Empty :. Full 1 :. Nil
+-- Empty
+
+-- Full 1 :. Full 2 :. Nil
+-- Full (1 :. 2 :. Nil)
 
 -- seqOptional (Full 1 :. Full 2 :. Nil)
 -- foldRight _todo (Full Nil) (Full 1 :. Full 2 :. Nil)

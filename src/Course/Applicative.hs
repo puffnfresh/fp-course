@@ -34,9 +34,8 @@ class Functor f => Applicative f where
 -- (<*>) :: f (b -> c) -> f b -> f c
 
 -- (<$>) :: (a -> b) -> f a -> f b
--- pure :: a -> f a
 -- (<*>) :: f (a -> b) -> f a -> f b
-
+-- pure :: a -> f a
 
 --   (a -> b) -> (f a -> f b)
 
@@ -168,11 +167,13 @@ instance Applicative Optional where
 --
 -- prop> pure x y == x
 instance Applicative ((->) t) where
+  -- K
   pure ::
     a
     -> t -> a
   pure =
     const
+  -- S
   (<*>) ::
     (t -> a -> b)
     -> (t -> a)
@@ -180,6 +181,9 @@ instance Applicative ((->) t) where
     -> b
   (<*>) tab ta t =
     tab t (ta t)
+
+-- S K I
+-- S K
 
 -- tab = (*)
 -- ta = (+2)
@@ -278,6 +282,13 @@ lift3 g fa fb fc =
 
   -- lift2 g fa fb <*> fc
 
+
+-- pure :: a -> f a
+-- (<$>) :: (a -> b) -> f a -> f b
+-- lift2 :: (a -> b -> c) -> f a -> f b -> f c
+-- lift3 :: (a -> b -> c -> d) -> f a -> f b -> f c -> f d
+-- lift4 :: (a -> b -> c -> d -> e) -> f a -> f b -> f c -> f d -> f e
+
 -- | Apply a quaternary function in the environment.
 --
 -- >>> lift4 (\a b c d -> a + b + c + d) (ExactlyOne 7) (ExactlyOne 8) (ExactlyOne 9) (ExactlyOne 10)
@@ -308,8 +319,8 @@ lift4 ::
   -> f c
   -> f d
   -> f e
-lift4 =
-  error "todo: Course.Applicative#lift4"
+lift4 f fa fb fc fd =
+  lift3 f fa fb fc <*> fd
 
 -- | Apply, discarding the value of the first argument.
 -- Pronounced, right apply.
@@ -326,6 +337,9 @@ lift4 =
 -- >>> Full 7 *> Full 8
 -- Full 8
 --
+-- >>> Empty *> Full 8
+-- Empty
+--
 -- prop> (a :. b :. c :. Nil) *> (x :. y :. z :. Nil) == (x :. y :. z :. x :. y :. z :. x :. y :. z :. Nil)
 --
 -- prop> Full x *> Full y == Full y
@@ -335,7 +349,7 @@ lift4 =
   -> f b
   -> f b
 (*>) =
-  error "todo: Course.Applicative#(*>)"
+  lift2 (const id)
 
 -- | Apply, discarding the value of the second argument.
 -- Pronounced, left apply.
@@ -361,7 +375,12 @@ lift4 =
   -> f a
   -> f b
 (<*) =
-  error "todo: Course.Applicative#(<*)"
+  lift2 const
+
+-- (*>) = lift2 (flip const)
+
+-- Involution
+-- (flip . flip) = id
 
 -- | Sequences a list of structures to a structure of list.
 --
@@ -384,7 +403,7 @@ sequence ::
   List (f a)
   -> f (List a)
 sequence =
-  error "todo: Course.Applicative#sequence"
+  foldRight (lift2 (:.)) (pure Nil)
 
 -- | Replicate an effect a given number of times.
 --
