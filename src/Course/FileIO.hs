@@ -118,13 +118,13 @@ run ::
   FilePath
   -> IO ()
 run =
-  error "todo: Course.FileIO#run"
+  putStrLn
 
 -- /Tip:/ use @getArgs@ and @run@
 main ::
   IO ()
 main =
-  error "todo: Course.FileIO#main"
+  (run . headOr Nil) =<< getArgs
 
 ----
 
