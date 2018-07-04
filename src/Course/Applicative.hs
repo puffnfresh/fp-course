@@ -353,6 +353,11 @@ sequence ::
 sequence =
   foldRight (lift2 (:.)) (pure Nil)
 
+-- (:.) :: a -> List a -> List a
+-- lift2 (:.) :: f a -> f (List a) -> f (List a)
+
+-- pure aka lift0
+
 -- | Replicate an effect a given number of times.
 --
 -- >>> replicateA 4 (ExactlyOne "hi")
