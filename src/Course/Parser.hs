@@ -19,7 +19,7 @@ import Data.Char
 -- >>> :set -XOverloadedStrings
 -- >>> import Data.Char(isUpper)
 
-type Input = Chars
+type Input = Chars -- List Char
 
 data ParseResult a =
     UnexpectedEof
@@ -86,6 +86,10 @@ onResult (Result i a) k =
 
 data Parser a = P (Input -> ParseResult a)
 
+-- invalid -- (\i -> UnexpectedEof) :: Parser Int
+
+-- P (\i -> UnexpectedEof) :: Parser Int
+
 parse ::
   Parser a
   -> Input
@@ -120,7 +124,12 @@ constantParser =
 character ::
   Parser Char
 character =
-  error "todo: Course.Parser#character"
+  P (\i -> case i of
+    x :. xs -> Result xs x
+    Nil -> UnexpectedEof
+  )
+
+-- Result :: Input -> Char -> ParseResult Char
 
 -- | Parsers can map.
 -- Write a Functor instance for a @Parser@.
@@ -132,8 +141,8 @@ instance Functor Parser where
     (a -> b)
     -> Parser a
     -> Parser b
-  (<$>) =
-     error "todo: Course.Parser (<$>)#instance Parser"
+  (<$>) f p =
+     P (\i -> f <$> parse p i)
 
 -- | Return a parser that always succeeds with the given value and consumes no input.
 --
@@ -143,7 +152,7 @@ valueParser ::
   a
   -> Parser a
 valueParser =
-  error "todo: Course.Parser#valueParser"
+  P . flip Result
 
 -- | Return a parser that tries the first parser for a successful value.
 --
@@ -166,8 +175,11 @@ valueParser =
   Parser a
   -> Parser a
   -> Parser a
-(|||) =
-  error "todo: Course.Parser#(|||)"
+(|||) pa pb =
+  P (\i ->
+    let x = parse pa i 
+    in if isErrorResult x then parse pb i else x
+  )
 
 infixl 3 |||
 
@@ -198,8 +210,10 @@ instance Monad Parser where
     (a -> Parser b)
     -> Parser a
     -> Parser b
-  (=<<) =
-    error "todo: Course.Parser (=<<)#instance Parser"
+  (=<<) f pa =
+    P (\i -> 
+      onResult (parse pa i) (flip (parse . f))
+    )
 
 -- | Write an Applicative functor instance for a @Parser@.
 -- /Tip:/ Use @(=<<)@.
@@ -214,7 +228,9 @@ instance Applicative Parser where
     -> Parser a
     -> Parser b
   (<*>) =
-    error "todo: Course.Parser (<*>)#instance Parser"
+    -- (\ab -> (\a -> valueParser (ab a)) =<< pa) =<< pab
+    -- (\ab -> ab <$> pa) =<< pab
+    (<**>)
 
 -- | Return a parser that continues producing a list of values from the given parser.
 --
@@ -278,8 +294,9 @@ list1 =
 satisfy ::
   (Char -> Bool)
   -> Parser Char
-satisfy =
-  error "todo: Course.Parser#satisfy"
+satisfy p =
+  (\c -> if p c then pure c else unexpectedCharParser c) 
+    =<< character
 
 -- | Return a parser that produces the given character but fails if
 --
