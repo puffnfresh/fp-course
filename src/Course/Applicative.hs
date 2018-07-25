@@ -251,6 +251,18 @@ lift4 ::
 lift4 abcde fa fb fc =
   (lift3 abcde fa fb fc <*>)
 
+lift5 ::
+  (Applicative f) =>
+  (a -> b -> c -> d -> e -> g)
+  -> f a
+  -> f b
+  -> f c
+  -> f d
+  -> f e
+  -> f g
+lift5 abcdeg fa fb fc fd =
+  (lift4 abcdeg fa fb fc fd <*>)
+
 -- | Apply a nullary function in the environment.
 lift0 ::
   Applicative f =>

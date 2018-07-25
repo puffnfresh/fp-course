@@ -537,8 +537,7 @@ phoneBodyParser =
 phoneParser ::
   Parser Chars
 phoneParser =
-  error "TODO"
-  -- TODO: SHOW 2 implementations
+  lift2 (:.) digit phoneBodyParser <* is '#'
 
 -- | Write a parser for Person.
 --
@@ -592,7 +591,12 @@ phoneParser =
 personParser ::
   Parser Person
 personParser =
-  error "todo: Course.Parser#personParser"
+  Person
+    <$>  ageParser
+    <*>~ firstNameParser
+    <*>~ surnameParser
+    <*>~ smokerParser
+    <*>~ phoneParser
 
 -- Make sure all the tests pass!
 
