@@ -286,7 +286,7 @@ hex =
 hexu ::
   Parser Char
 hexu =
-  error "todo: Course.MoreParser#hexu"
+  is 'u' *> hex
 
 -- | Write a function that produces a non-empty list of values coming off the given parser (which must succeed at least once),
 -- separated by the second given parser.
@@ -308,8 +308,9 @@ sepby1 ::
   Parser a
   -> Parser s
   -> Parser (List a)
-sepby1 =
-  error "todo: Course.MoreParser#sepby1"
+sepby1 pa ps =
+  -- (\a -> (a :.) <$> list (ps *> pa)) =<< pa
+  lift2 (:.) pa (list (ps *> pa))
 
 -- | Write a function that produces a list of values coming off the given parser,
 -- separated by the second given parser.
@@ -331,8 +332,8 @@ sepby ::
   Parser a
   -> Parser s
   -> Parser (List a)
-sepby =
-  error "todo: Course.MoreParser#sepby"
+sepby pa ps =
+  sepby1 pa ps ||| pure Nil
 
 -- | Write a parser that asserts that there is no remaining input.
 --
@@ -344,7 +345,9 @@ sepby =
 eof ::
   Parser ()
 eof =
-  error "todo: Course.MoreParser#eof"
+  P (\i -> case i of
+    Nil -> Result Nil ()
+    _   -> ExpectedEof i)
 
 -- | Write a parser that produces a character that satisfies all of the given predicates.
 --
@@ -367,8 +370,9 @@ eof =
 satisfyAll ::
   List (Char -> Bool)
   -> Parser Char
-satisfyAll =
-  error "todo: Course.MoreParser#satisfyAll"
+satisfyAll lp =
+  -- satisfy (\c -> and ((\f -> f c) <$> lp))
+  satisfy (and . sequence lp)
 
 -- | Write a parser that produces a character that satisfies any of the given predicates.
 --
@@ -388,8 +392,11 @@ satisfyAll =
 satisfyAny ::
   List (Char -> Bool)
   -> Parser Char
-satisfyAny =
-  error "todo: Course.MoreParser#satisfyAny"
+satisfyAny lp =
+  satisfy (or . sequence lp)
+
+-- [a,b,c,d]
+-- abcd
 
 -- | Write a parser that parses between the two given characters, separated by a comma character ','.
 --
@@ -417,5 +424,5 @@ betweenSepbyComma ::
   -> Char
   -> Parser a
   -> Parser (List a)
-betweenSepbyComma =
-  error "todo: Course.MoreParser#betweenSepbyComma"
+betweenSepbyComma c1 c2 pa =
+  betweenCharTok c1 c2 (sepby pa commaTok)
