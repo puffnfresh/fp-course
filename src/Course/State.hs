@@ -31,6 +31,8 @@ newtype State s a =
       -> (a, s)
   }
 
+-- State Char Int
+
 -- | Run the `State` seeded with `s` and retrieve the resulting state.
 --
 -- prop> \(Fun _ f) s -> exec (State f) s == snd (runState (State f) s)
@@ -38,8 +40,8 @@ exec ::
   State s a
   -> s
   -> s
-exec =
-  error "todo: Course.State#exec"
+exec st =
+  snd . runState st
 
 -- | Run the `State` seeded with `s` and retrieve the resulting value.
 --
@@ -48,8 +50,8 @@ eval ::
   State s a
   -> s
   -> a
-eval =
-  error "todo: Course.State#eval"
+eval st =
+  fst . runState st
 
 -- | A `State` where the state also distributes into the produced value.
 --
@@ -58,7 +60,7 @@ eval =
 get ::
   State s s
 get =
-  error "todo: Course.State#get"
+  State (\s -> (s, s))
 
 -- | A `State` where the resulting state is seeded with the given value.
 --
@@ -67,8 +69,8 @@ get =
 put ::
   s
   -> State s ()
-put =
-  error "todo: Course.State#put"
+put s =
+  State (const ((), s))
 
 -- | Implement the `Functor` instance for `State s`.
 --
@@ -79,8 +81,8 @@ instance Functor (State s) where
     (a -> b)
     -> State s a
     -> State s b
-  (<$>) =
-    error "todo: Course.State#(<$>)"
+  (<$>) f st =
+    State (\s -> let (a, s') = runState st s in (f a, s'))
 
 -- | Implement the `Applicative` instance for `State s`.
 --
@@ -97,14 +99,17 @@ instance Applicative (State s) where
   pure ::
     a
     -> State s a
-  pure =
-    error "todo: Course.State pure#instance (State s)"
+  pure a =
+    State (\s -> (a, s))
   (<*>) ::
     State s (a -> b)
     -> State s a
     -> State s b 
-  (<*>) =
-    error "todo: Course.State (<*>)#instance (State s)"
+  (<*>) sab st =
+    State (\s ->
+      let (ab, s') = runState sab s
+      in runState (ab <$> st) s'
+    )    
 
 -- | Implement the `Bind` instance for `State s`.
 --
@@ -118,8 +123,8 @@ instance Monad (State s) where
     (a -> State s b)
     -> State s a
     -> State s b
-  (=<<) =
-    error "todo: Course.State (=<<)#instance (State s)"
+  f =<< State k =
+    State (\s -> let (a, t) = k s in runState (f a) t)
 
 -- | Find the first element in a `List` that satisfies a given predicate.
 -- It is possible that no element is found, hence an `Optional` result.
