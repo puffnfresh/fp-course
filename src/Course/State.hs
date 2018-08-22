@@ -145,8 +145,11 @@ findM ::
   (a -> f Bool)
   -> List a
   -> f (Optional a)
-findM =
-  error "todo: Course.State#findM"
+findM f =
+  foldRight g (pure Empty)
+  where
+   g a fo =
+    (\b -> if b then pure (Full a) else fo) =<< f a
 
 -- | Find the first element in a `List` that repeats.
 -- It is possible that no element repeats, hence an `Optional` result.
@@ -159,8 +162,11 @@ firstRepeat ::
   Ord a =>
   List a
   -> Optional a
-firstRepeat =
-  error "todo: Course.State#firstRepeat"
+firstRepeat xs =
+  eval (findM f xs) S.empty
+  where
+    f a =
+      (\s -> if S.member a s then pure True else False <$ put (S.insert a s)) =<< get
 
 -- | Remove all duplicate elements in a `List`.
 -- /Tip:/ Use `filtering` and `State` with a @Data.Set#Set@.
@@ -172,8 +178,11 @@ distinct ::
   Ord a =>
   List a
   -> List a
-distinct =
-  error "todo: Course.State#distinct"
+distinct xs =
+  eval (filtering f xs) S.empty
+  where
+    f a =
+      (\s -> S.notMember a s <$ put (S.insert a s)) =<< get
 
 -- | A happy number is a positive integer, where the sum of the square of its digits eventually reaches 1 after repetition.
 -- In contrast, a sad number (not a happy number) is where the sum of the square of its digits never reaches 1

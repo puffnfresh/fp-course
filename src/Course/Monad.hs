@@ -164,8 +164,6 @@ join ffa =
 (>>=) fa afb =
   join (afb <$> fa)
 
--- flip (=<<)
-
 infixl 1 >>=
 
 -- | Implement composition within the @Monad@ environment.
