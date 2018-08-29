@@ -209,4 +209,14 @@ isHappy ::
   Integer
   -> Bool
 isHappy =
-  error "todo: Course.State#isHappy"
+  contains 1
+    . firstRepeat
+      . produce (toInteger . sum . (square <$>) . digits)
+
+square :: Int -> Int
+square =
+  join (*)
+
+digits :: Integer -> List Int
+digits =
+  (digitToInt <$>) . show'
