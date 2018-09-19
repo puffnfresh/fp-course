@@ -284,8 +284,8 @@ data Logger l a =
 -- >>> (+3) <$> Logger (listh [1,2]) 3
 -- Logger [1,2] 6
 instance Functor (Logger l) where
-  (<$>) =
-    error "todo: Course.StateT (<$>)#instance (Logger l)"
+  f <$> Logger l a =
+    Logger l (f a)
 
 -- | Implement the `Applicative` instance for `Logger`.
 --
@@ -296,9 +296,9 @@ instance Functor (Logger l) where
 -- Logger [1,2,3,4] 10
 instance Applicative (Logger l) where
   pure =
-    error "todo: Course.StateT pure#instance (Logger l)"
-  (<*>) =
-    error "todo: Course.StateT (<*>)#instance (Logger l)"
+    Logger Nil
+  Logger l1 f <*> Logger l2 a =
+    Logger (l1 ++ l2) (f a)
 
 -- | Implement the `Monad` instance for `Logger`.
 -- The `bind` implementation must append log values to maintain associativity.
@@ -306,8 +306,9 @@ instance Applicative (Logger l) where
 -- >>> (\a -> Logger (listh [4,5]) (a+3)) =<< Logger (listh [1,2]) 3
 -- Logger [1,2,4,5] 6
 instance Monad (Logger l) where
-  (=<<) =
-    error "todo: Course.StateT (=<<)#instance (Logger l)"
+  f =<< Logger l1 a =
+    let Logger l2 b = f a
+    in Logger (l1 ++ l2) b
 
 -- | A utility function for producing a `Logger` with one log value.
 --
@@ -317,8 +318,8 @@ log1 ::
   l
   -> a
   -> Logger l a
-log1 =
-  error "todo: Course.StateT#log1"
+log1 l =
+  Logger (pure l)
 
 -- | Remove all duplicate integers from a list. Produce a log as you go.
 -- If there is an element above 100, then abort the entire computation and produce no result.
@@ -338,8 +339,25 @@ distinctG ::
   (Integral a, Show a) =>
   List a
   -> Logger Chars (Optional (List a))
-distinctG =
-  error "todo: Course.StateT#distinctG"
+distinctG xs =
+  runOptionalT (evalT (filtering f xs) S.empty)
+  where
+    f a =
+      StateT (\s -> checkNumber a (S.notMember a s, S.insert a s))
+
+checkNumber ::
+  (Integral a, Show a) =>
+  a ->
+  b ->
+  OptionalT (Logger Chars) b
+checkNumber a =
+  OptionalT .
+    if a > 100
+    then log1 ("aborting > 100: " ++ show' a) . const Empty
+    else
+      if even a
+      then log1 ("even number: " ++ show' a) . Full
+      else pure . Full
 
 onFull ::
   Applicative f =>
