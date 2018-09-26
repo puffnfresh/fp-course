@@ -340,24 +340,33 @@ distinctG ::
   List a
   -> Logger Chars (Optional (List a))
 distinctG xs =
-  runOptionalT (evalT (filtering f xs) S.empty)
+  runOptionalT (evalT (filtering f xs) S.empty)  
   where
     f a =
-      StateT (\s -> checkNumber a (S.notMember a s, S.insert a s))
-
-checkNumber ::
-  (Integral a, Show a) =>
-  a ->
-  b ->
-  OptionalT (Logger Chars) b
-checkNumber a =
-  OptionalT .
-    if a > 100
-    then log1 ("aborting > 100: " ++ show' a) . const Empty
-    else
+      StateT (\s ->
+        OptionalT (
+          if a > 100
+          then log1 ("aborting > 100: " ++ show' a) Empty
+          else logIfEven a (Full (S.notMember a s, S.insert a s))
+        )
+      )
+    logIfEven a fa =
       if even a
-      then log1 ("even number: " ++ show' a) . Full
-      else pure . Full
+      then log1 ("even number: " ++ show' a) fa
+      else pure fa
+
+-- Logger Chars (Optional (a, Set a))
+
+-- OptionalT (Logger Chars) Bool
+
+-- pure :: a -> OptionalT (Logger Chars) a
+
+
+-- a -> StateT (S.Set a0) (OptionalT (Logger Chars)) Bool
+
+-- OptionalT (Logger a) b
+
+-- Logger a (Optional b)
 
 onFull ::
   Applicative f =>
