@@ -49,10 +49,35 @@ infinity =
   let inf x = x :. inf (x+1)
   in inf 0
 
+-- 1  :. 2  :. 3  :. Nil
+
+-- 1 `f` 2 `f` 3 `f` b
+
+
+-- 1 :. (2 :. (3 :. Nil))
+-- 1  + 2  + 3  + 0
+
+-- 1  + (2  + (3 + 0))
+-- 1  + (2  +  3)
+-- 1  + 5
+-- 6
+
 -- functions over List that you may consider using
 foldRight :: (a -> b -> b) -> b -> List a -> b
 foldRight _ b Nil      = b
 foldRight f b (h :. t) = f h (foldRight f b t)
+
+-- var x = 0;
+-- for(a in xs) {
+--   x = x + a;
+-- }
+-- return x;
+
+-- var x = b;
+-- for(a in xs) {
+--   x = f(x, a);
+-- }
+-- return x;
 
 foldLeft :: (b -> a -> b) -> b -> List a -> b
 foldLeft _ b Nil      = b
@@ -76,7 +101,12 @@ headOr ::
   -> List a
   -> a
 headOr =
-  error "todo: Course.List#headOr"
+  foldRight const
+
+-- 1 :. (2 :. Nil)
+
+-- 1 `const` (2  `const`  a)
+-- const 1 (const 2 a)
 
 -- | The product of the elements of a list.
 --
@@ -92,7 +122,11 @@ product ::
   List Int
   -> Int
 product =
-  error "todo: Course.List#product"
+  foldRight (*) 1
+
+-- 1 :. 2 :. 3 :. Nil
+
+-- 1 * 2 * 3 * 1
 
 -- | Sum the elements of the list.
 --
@@ -107,7 +141,7 @@ sum ::
   List Int
   -> Int
 sum =
-  error "todo: Course.List#sum"
+  foldRight (+) 0
 
 -- | Return the length of the list.
 --
@@ -119,7 +153,7 @@ length ::
   List a
   -> Int
 length =
-  error "todo: Course.List#length"
+  foldRight (const (1 +)) 0
 
 -- | Map the given function on each element of the list.
 --
@@ -133,8 +167,8 @@ map ::
   (a -> b)
   -> List a
   -> List b
-map =
-  error "todo: Course.List#map"
+map f =
+  foldRight ((:.) . f) Nil
 
 -- | Return elements satisfying the given predicate.
 --
@@ -150,8 +184,11 @@ filter ::
   (a -> Bool)
   -> List a
   -> List a
-filter =
-  error "todo: Course.List#filter"
+filter f xs =
+  foldRight (\a b -> if f a then a :. b else b) Nil xs
+
+-- if True  then 1 else 2
+-- if False then 1 else 2
 
 -- | Append two lists to a new list.
 --
@@ -170,7 +207,7 @@ filter =
   -> List a
   -> List a
 (++) =
-  error "todo: Course.List#(++)"
+  flip (foldRight (:.))
 
 infixr 5 ++
 
@@ -188,7 +225,7 @@ flatten ::
   List (List a)
   -> List a
 flatten =
-  error "todo: Course.List#flatten"
+  foldRight (++) Nil
 
 -- | Map a function then flatten to a list.
 --
@@ -204,8 +241,8 @@ flatMap ::
   (a -> List b)
   -> List a
   -> List b
-flatMap =
-  error "todo: Course.List#flatMap"
+flatMap f =
+  flatten . map f
 
 -- | Flatten a list of lists to a list (again).
 -- HOWEVER, this time use the /flatMap/ function that you just wrote.
@@ -287,6 +324,12 @@ lengthGT4 ::
 lengthGT4 =
   error "todo: Course.List#lengthGT4"
 
+-- var x = [];
+-- for(i in xs) {
+--   x = x.cons(i);
+-- }
+-- return x;
+
 -- | Reverse a list.
 --
 -- >>> reverse Nil
@@ -302,7 +345,14 @@ reverse ::
   List a
   -> List a
 reverse =
-  error "todo: Course.List#reverse"
+  foldLeft (flip (:.)) Nil
+
+-- 1 :. 2 :. 3 :. Nil
+
+-- Nil
+-- 1 :. Nil
+-- 2 :. 1 :. Nil
+-- 3 :. 2 :. 1 :. Nil
 
 -- | Produce an infinite `List` that seeds with the given value at its head,
 -- then runs the given function for subsequent elements
@@ -327,11 +377,18 @@ produce f x = x :. produce f (f x)
 -- prop> \x -> let types = x :: List Int in notReverse x ++ notReverse y == notReverse (y ++ x)
 --
 -- prop> \x -> let types = x :: Int in notReverse (x :. Nil) == x :. Nil
+
+property1 x y = notReverse x ++ notReverse y == notReverse (y ++ x)
+property2 x = notReverse (x :. Nil) == x :. Nil
+
+-- (1 :. 2 :. 3 :. 4 :. Nil) == (3 :. 4 :. 1 :. 2 :. Nil)
+
+
 notReverse ::
   List a
   -> List a
 notReverse =
-  error "todo: Is it even possible?"
+  reverse
 
 ---- End of list exercises
 
