@@ -33,8 +33,14 @@ import qualified Numeric as N
 -- The custom list type
 data List t =
   Nil
-  | t :. List t
+  | (:.) t (List t)
   deriving (Eq, Ord)
+
+-- Nil
+
+-- 1 :. Nil
+
+-- 2 :. (1 :. Nil)
 
 -- Right-associative
 infixr 5 :.
@@ -50,9 +56,35 @@ infinity =
   in inf 0
 
 -- functions over List that you may consider using
+
+-- CONSTRUCTOR REPLACEMENT
+
 foldRight :: (a -> b -> b) -> b -> List a -> b
 foldRight _ b Nil      = b
 foldRight f b (h :. t) = f h (foldRight f b t)
+
+-- Nil
+-- (:.)
+
+-- foldRight (+) 0 (1 :. 2 :. 3 :. Nil)
+
+-- 1 :. 2 :. 3 :. Nil
+-- 1 + (2 + (3 +  0))
+
+-- foldRight f x (1 :. 2 :. 3 :. Nil)
+-- 1 :. 2 :. 3 :. Nil
+-- (:.) 1 ((:.) 2 ((:.) 3 Nil)))
+-- f    1 (f    2 (f    3 x))
+
+-- optional (+1) 0 (Full 8)
+-- (+1) 8
+
+-- optional (+1) 0 Empty
+-- 0
+
+-- FOR LOOP
+
+-- foldLeft f x (1 :. 2 :. 3 :. Nil)
 
 foldLeft :: (b -> a -> b) -> b -> List a -> b
 foldLeft _ b Nil      = b
@@ -62,7 +94,7 @@ foldLeft f b (h :. t) = let b' = f b h in b' `seq` foldLeft f b' t
 
 -- | Returns the head of the list or the given default.
 --
--- >>> headOr 3 (1 :. 2 :. Nil)
+-- >>> headOr 3 (1 :. (2 :. Nil))
 -- 1
 --
 -- >>> headOr 3 Nil
@@ -76,7 +108,7 @@ headOr ::
   -> List a
   -> a
 headOr =
-  error "todo: Course.List#headOr"
+  foldRight const
 
 -- | The product of the elements of a list.
 --
