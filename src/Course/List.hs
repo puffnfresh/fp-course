@@ -306,7 +306,11 @@ seqOptional ::
   List (Optional a)
   -> Optional (List a)
 seqOptional =
-  error "todo: Course.List#seqOptional"
+  foldRight (twiceOptional (:.)) (Full Nil)
+
+-- (Full 1) :. Nil
+
+-- f (Full 1) (Full Nil)
 
 -- | Find the first element in the list matching the predicate.
 --
@@ -328,9 +332,15 @@ find ::
   (a -> Bool)
   -> List a
   -> Optional a
-find =
-  error "todo: Course.List#find"
+find p =
+  headOr Empty . map Full . filter p
 
+--  foldRight (\a o ->
+--    if p a
+--    then Full a
+--    else o
+--  ) Empty
+ 
 -- | Determine if the length of the given list is greater than 4.
 --
 -- >>> lengthGT4 (1 :. 3 :. 5 :. Nil)
@@ -347,8 +357,10 @@ find =
 lengthGT4 ::
   List a
   -> Bool
-lengthGT4 =
-  error "todo: Course.List#lengthGT4"
+lengthGT4 (_ :. _ :. _ :. _ :. _ :. _) =
+  True
+lengthGT4 _ =
+  False
 
 -- | Reverse a list.
 --
