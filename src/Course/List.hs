@@ -377,7 +377,31 @@ reverse ::
   List a
   -> List a
 reverse =
-  error "todo: Course.List#reverse"
+  foldLeft (flip (:.)) Nil
+
+-- x :. xs
+
+-- []
+
+-- [] ++ [4]
+-- [4] ++ [3]
+-- [4, 3] ++ [2]
+-- [4, 3, 2] ++ [1]
+
+-- [4, 3, 2, 1]
+
+-- var r = []
+
+-- for (x in xs) {
+--   r = x :. r
+-- }
+
+-- return r
+
+-- 1 :. []
+-- 2 :. 1 :. []
+-- 3 :. 2 :. 1 :. []
+-- 4 :. 3 :. 2 :. 1 :. []
 
 -- | Produce an infinite `List` that seeds with the given value at its head,
 -- then runs the given function for subsequent elements
@@ -407,6 +431,13 @@ notReverse ::
   -> List a
 notReverse =
   error "todo: Is it even possible?"
+
+
+-- id Nil == Nil
+-- id x ++ id y == id (y ++ x)
+
+-- reverse Nil == Nil
+-- reverse x ++ reverse y == reverse (y ++ x)
 
 ---- End of list exercises
 
