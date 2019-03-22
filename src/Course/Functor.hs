@@ -123,8 +123,8 @@ instance Functor ((->) t) where
   a
   -> f b
   -> f a
-(<$) =
-  error "todo: Course.Functor#(<$)"
+(<$) a =
+  (const a <$>)
 
 -- | Anonymous map producing unit value.
 --
@@ -144,7 +144,7 @@ void ::
   f a
   -> f ()
 void =
-  error "todo: Course.Functor#void"
+  (() <$)
 
 -----------------------
 -- SUPPORT LIBRARIES --
