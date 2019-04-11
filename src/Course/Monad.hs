@@ -13,6 +13,10 @@ import Course.List
 import Course.Optional
 import qualified Prelude as P((=<<))
 
+-- (<$>) ::   (a -> b) -> (f a -> f b)
+-- (<*>) :: f (a -> b) -> (f a -> f b)
+-- (=<<) :: (a -> f b) -> (f a -> f b)
+
 -- | All instances of the `Monad` type-class must satisfy one law. This law
 -- is not checked by the compiler. This law is given as:
 --
@@ -36,8 +40,8 @@ instance Monad ExactlyOne where
     (a -> ExactlyOne b)
     -> ExactlyOne a
     -> ExactlyOne b
-  (=<<) =
-    error "todo: Course.Monad (=<<)#instance ExactlyOne"
+  (=<<) f =
+    f . runExactlyOne
 
 -- | Binds a function on a List.
 --
@@ -49,7 +53,7 @@ instance Monad List where
     -> List a
     -> List b
   (=<<) =
-    error "todo: Course.Monad (=<<)#instance List"
+    flatMap
 
 -- | Binds a function on an Optional.
 --
@@ -61,7 +65,7 @@ instance Monad Optional where
     -> Optional a
     -> Optional b
   (=<<) =
-    error "todo: Course.Monad (=<<)#instance Optional"
+    bindOptional
 
 -- | Binds a function on the reader ((->) t).
 --
@@ -69,11 +73,12 @@ instance Monad Optional where
 -- 119
 instance Monad ((->) t) where
   (=<<) ::
-    (a -> ((->) t b))
-    -> ((->) t a)
-    -> ((->) t b)
-  (=<<) =
-    error "todo: Course.Monad (=<<)#instance ((->) t)"
+    (a -> t -> b)
+    -> (t -> a)
+    -> t 
+    -> b
+  (=<<) atb ta t =
+    atb (ta t) t
 
 -- | Witness that all things with (=<<) and (<$>) also have (<*>).
 --
@@ -111,8 +116,10 @@ instance Monad ((->) t) where
   f (a -> b)
   -> f a
   -> f b
-(<**>) =
-  error "todo: Course.Monad#(<**>)"
+(<**>) fab =
+  ((\a -> ($ a) <$> fab) =<<)
+
+-- ($) :: (a -> b) -> a -> b
 
 infixl 4 <**>
 
@@ -134,7 +141,10 @@ join ::
   f (f a)
   -> f a
 join =
-  error "todo: Course.Monad#join"
+  (id =<<)
+
+-- (=<<) :: (a -> f b) -> f a -> f b
+-- (f a -> f a) -> f (f a) -> f a
 
 -- | Implement a flipped version of @(=<<)@, however, use only
 -- @join@ and @(<$>)@.
@@ -148,7 +158,7 @@ join =
   -> (a -> f b)
   -> f b
 (>>=) =
-  error "todo: Course.Monad#(>>=)"
+  flip (=<<)
 
 infixl 1 >>=
 
@@ -163,8 +173,13 @@ infixl 1 >>=
   -> (a -> f b)
   -> a
   -> f c
-(<=<) =
-  error "todo: Course.Monad#(<=<)"
+(<=<) bfc afb =
+  (bfc =<<) . afb
+
+--   (.) ::   (b -> c) ->   (a -> b) ->   (a -> c)
+-- (<=<) :: (b -> f c) -> (a -> f b) -> (a -> f c)
+
+--       :: (f b -> c) -> (f a -> b) -> (f a -> c)
 
 infixr 1 <=<
 
